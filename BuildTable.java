@@ -46,6 +46,16 @@ public class BuildTable
 		classList.get("Int").features.addAll(mObject);
 	}
 
+	public AST.class_ getObject()
+	{
+		return classList.get("Object");
+	}
+
+	public AST.class_ getIO()
+	{
+		return classList.get("IO");
+	}
+
 	public void insert(AST.class_ cl)
 	{
 		AST.class_ newClass = new AST.class_(cl.name, cl.filename, cl.parent, classList.get(cl.parent).features, cl.lineNo);
@@ -84,7 +94,7 @@ public class BuildTable
 			}
 			else if(f instanceof AST.method)
 			{
-				bool flag = false;
+				boolean flag = false;
 				AST.method m = (AST.method) f;
 				if(newmList.containsKey(m.name))
 				{
@@ -104,10 +114,10 @@ public class BuildTable
 						}
 						for(int i=0;i<m.formals.size();i++)
 						{
-							if(m.formals[i].typeid.equals(mchild.formals[i].typeid) == false)
+							if(m.formals.get(i).typeid.equals(mchild.formals.get(i).typeid) == false)
 							{
 								err.add(new Error(cl.filename, mchild.lineNo, "In redefined method " + m.name + ", parameter type"
-									+ mchild.formals[i].typeid + " is different from original type " + m.formals[i].typeid));
+									+ mchild.formals.get(i).typeid + " is different from original type " + m.formals.get(i).typeid));
 								flag = true;
 							}
 						}
