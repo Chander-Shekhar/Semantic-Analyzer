@@ -1,5 +1,7 @@
 package cool;
 
+import java.util.*;
+
 public class Semantic{
 	private boolean errorFlag = false;
 	public void reportError(String filename, int lineNo, String error){
@@ -15,10 +17,13 @@ public class Semantic{
 */
 	public Semantic(AST.program program){
 		//Write Semantic analyzer code here
+
 		// initialize classList here
-		inGraph=new Inheritance_graph(classList);
+		BuildTable Table = new BuildTable();
+		Inheritance_graph inGraph = new Inheritance_graph(program.classes, Table);
 		inGraph.buildGraph(program.classes);
 		inGraph.isDAG();
-		inGraph.insert_classes(classList);
+		inGraph.insert_classes(Table);
+
 	}
 }
