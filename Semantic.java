@@ -91,7 +91,120 @@ public class Semantic{
 				reportError(filename, a.value.lineNo, "Inferred type " + a.value.type + " of initialization of attribute "+ a.name + " does not conform to declared type " + a.typeid);
 		}
 	}
+	private void Annotate(AST.expression expr){
+	 	if(expr.getClass() == AST.int_const.class)
+			Annotate((AST.int_const)expr);
+		else if(expr.getClass() == AST.string_const.class)
+			Annotate((AST.string_const)expr);
+		else if(expr.getClass() == AST.bool_const.class)
+			Annotate((AST.bool_const)expr);
+		else if(expr.getClass() == AST.object.class)
+			Annotate((AST.object)expr);
+	 	else if(expr.getClass() == AST.assign.class)
+			Annotate((AST.assign)expr);
+		else if(expr.getClass() == AST.dispatch.class)
+			Annotate((AST.dispatch)expr);
+		else if(expr.getClass() == AST.static_dispatch.class)
+			Annotate((AST.static_dispatch)expr);
+		else if(expr.getClass() == AST.cond.class)
+			Annotate((AST.cond)expr);
+		else if(expr.getClass() == AST.loop.class)
+			Annotate((AST.loop)expr);
+		else if(expr.getClass() == AST.block.class)
+			Annotate((AST.block)expr);
+		else if(expr.getClass() == AST.let.class)
+			Annotate((AST.let)expr);
+		else if(expr.getClass() == AST.typcase.class)
+			Annotate((AST.typcase)expr);
+		else if(expr.getClass() == AST.new_.class)
+			Annotate((AST.new_)expr);
+		else if(expr.getClass() == AST.isvoid.class)
+			Annotate((AST.isvoid)expr);
+		else if(expr.getClass() == AST.plus.class)
+			Annotate((AST.plus)expr);
+		else if(expr.getClass() == AST.sub.class)
+			Annotate((AST.sub)expr);
+		else if(expr.getClass() == AST.mul.class)
+			Annotate((AST.mul)expr);
+		else if(expr.getClass() == AST.divide.class)
+			Annotate((AST.divide)expr);
+		else if(expr.getClass() == AST.comp.class)
+			Annotate((AST.comp)expr);
+		else if(expr.getClass() == AST.lt.class)
+			Annotate((AST.lt)expr);
+		else if(expr.getClass() == AST.leq.class)
+			Annotate((AST.leq)expr);
+		else if(expr.getClass() == AST.eq.class)
+			Annotate((AST.eq)expr);
+		else if(expr.getClass() == AST.neg.class)
+			Annotate((AST.neg)expr);
+	}
 
+	private void Annotate(AST.int_const.class int){
+		int.type = "Int";
+	}
+	private void Annotate(AST.string_const.class String){
+		String.type = "String";
+	}
+	private void Annotate(AST.bool_const.class bool){
+		bool.type = "Bool";
+	}
+
+	private void Annotate(AST.dispatch.class dispatch){
+
+	}
+
+	private void Annotate(AST.static_dispatch.class static_dispatch){
+		
+	}
+	private void Annotate(AST.cond.class cond){
+		
+	}
+	private void Annotate(AST.loop.class loop){
+		
+	}
+	private void Annotate(AST.block.class block){
+		
+	}
+	private void Annotate(AST.let.class let){
+		
+	}
+	private void Annotate(AST.typecase.class typecase){
+		
+	}
+	private void Annotate(AST.new_.class new_){
+		
+	}
+	private void Annotate(AST.isvoid.class isvoid){
+		
+	}
+	private void Annotate(AST.plus.class plus){
+		
+	}
+	private void Annotate(AST.sub.class sub){
+		
+	}
+	private void Annotate(AST.mul.class mul){
+		
+	}
+	private void Annotate(AST.divide.class divide){
+		
+	}
+	private void Annotate(AST.comp.class comp){
+		
+	}
+	private void Annotate(AST.lt.class lt){
+		
+	}
+	private void Annotate(AST.leq.class leq){
+		
+	}
+	private void Annotate(AST.eq.class eq){
+		
+	}
+	private void Annotate(AST.neg.class neg){
+		
+	}
 	private void Annotate(AST.assign assign)
 	{
 		Annotate(assign.e1);
@@ -103,4 +216,6 @@ public class Semantic{
 
 		assign.type = assign.e1.type;
 	}
+	
+	
 }
