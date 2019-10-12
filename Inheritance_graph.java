@@ -13,7 +13,7 @@ public class Inheritance_graph{
 
 	private List< List <Integer> > Graph;
 
-	public Inheritance_graph(){
+	public Inheritance_graph(HashMap<String, AST.class_> classList){
 		Class_to_Int = new HashMap<AST.class_, Integer>;
 
 		Int_to_Class = new HashMap<Integer, AST.class_>;
@@ -51,20 +51,24 @@ public class Inheritance_graph{
 		}
 	}
 
-	public void buildGraph(){
-		for(AST.class_ class_object : AST.program.classes){
+	public void buildGraph(List<AST.class_> classes){
+		for(AST.class_ class_object : classes){
 			if(!Class_to_Int.containsKey(class_object.parent)){
 				System.err.println(class_object.filename+" : "+class_object.lineNo+" : Class " +class_object.name + " inherits from an undefined class");
 				System.exit(1);
 			}
-			graph[Class_to_Int(class_object.parent)].add(Class_to_Int(class_object));
+			graph[Class_to_Int.get(class_object.parent)].add(Class_to_Int.get(class_object));
 		}
 	}
 
 	public void isDAG(){
 		boolean visited[]= new boolean[size];
 		boolean flag=false;
-		dfs(0,visited,flag);
+		for(int i=0;i<size;i++){
+			if(!visited[i]){
+				dfs(i,visited,flag);
+			}
+		}
 		if(flag==true){
 			System.exit(1);
 		}
@@ -76,10 +80,21 @@ public class Inheritance_graph{
 			flag=true;
 		}
 		visited[v]=true;
-		for(int i=0;i<graph[v].size();i++){
-			int n=graph[v][i];
+		for(int i=0;i<Graph[v].size();i++){
+			int n=Graph[v][i];
 			if(!visited[n]){
 				dfs(n,visited,flag);
+			}
+		}
+	}
+	public void insert_classes(HashMap<String, AST.class_> classList){
+		Queue<Integer> Q = new LinkedList<>();
+		Q.add(0);
+		while(!Q.isempty()){
+			int i=Q.poll();
+			classList.put(Int_to_Class.get(i).name,Int_to_Class.get(i));
+			for(int j=0;j<Graph[i].size();j++){
+				Q.add(Graph[i][j]);
 			}
 		}
 	}
