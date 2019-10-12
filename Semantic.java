@@ -15,5 +15,10 @@ public class Semantic{
 */
 	public Semantic(AST.program program){
 		//Write Semantic analyzer code here
+		// initialize classList here
+		inGraph=new Inheritance_graph(classList);
+		inGraph.buildGraph(program.classes);
+		inGraph.isDAG();
+		inGraph.insert_classes(classList);
 	}
 }
