@@ -11,8 +11,6 @@ public class Inheritance_graph{
 
 	private Map<String, AST.class_> Name_to_Class;
 
-	// private Map<String, AST.class_> Name_to_Class;
-
 	private ArrayList< ArrayList <Integer> > Graph;
 
 	public Inheritance_graph(List<AST.class_> classes, BuildTable Table){
