@@ -46,16 +46,6 @@ public class BuildTable
 		classList.get("Int").features.addAll(mObject);
 	}
 
-	public AST.class_ getObject()
-	{
-		return classList.get("Object");
-	}
-
-	public AST.class_ getIO()
-	{
-		return classList.get("IO");
-	}
-
 	public void insert(AST.class_ cl)
 	{
 		AST.class_ newClass = new AST.class_(cl.name, cl.filename, cl.parent, classList.get(cl.parent).features, cl.lineNo);
@@ -157,6 +147,17 @@ public class BuildTable
 		return classList.get(cname);
 	}
 
+	public AST.method getMethod(String cname, String mname)
+	{
+		AST.class_ cl = classList.get(cname);
+		for(AST.feature f : cl.features)
+		{
+			if(f instanceof AST.method &&  mname.equals(f.name))
+				return (AST.method) f;
+		}
+		return null;
+	}
+	
 	boolean conformsTo(String c1, String c2)
 	{
 		if(c1 == null) return false;
