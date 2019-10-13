@@ -135,12 +135,67 @@ public class Semantic{
 	}
 
 	private void Annotate(AST.dispatch dispatch){
-
-	}
-
-	private void Annotate(AST.static_dispatch static_dispatch){
+		AST.method m;
+		boolean found = false;
+		Annotate(dispatch.caller);				// first process the caller.
 		
+		for(AST.expression expr : dispatch.actuals)	// then process all of the actual parameters (left-to-right)
+			Annotate(expr);
+		
+		if(!Table.isPresent(dispatch.caller.type))
+			reportError(filename, dispatch.lineNo, "Dispatch to undefined class " + dispatch.caller.type);
+		else {
+			m = Table.getMethod(dispatch.caller.type, dispatch.name);
+			if(m != null) {
+				dispatch.type = m.typeid;
+				if(dispatch.actuals.size() != m.formals.size())
+					reportError(filename, dispatch.lineNo, "Method " + m.name + " invoked with wrong number of arguments.");
+				else {
+					for(int i = 0; i < dispatch.actuals.size(); i++) {
+						if(Table.conformsTo(!dispatch.actuals.get(i).type, m.formals.get(i).typeid))
+							reportError(filename, dispatch.lineNo, "In call of method " + m.name + ", type " + dispatch.actuals.get(i).type + " does not conform to declared type " + m.formals.get(i).typeid);			
+					}
+				}
+				return ;	
+			}
+			reportError(filename, dispatch.lineNo, "Static dispatch to undefined method " + dispatch.name);
+		}
+		dispatch.type = "Object";
 	}
+
+	private void Annotate(AST.static_dispatch static_dispatch) {
+		AST.method m;
+		boolean found = false;
+		Annotate(static_dispatch.caller);				// first process the caller.
+		
+		for(AST.expression expr : static_dispatch.actuals)	// then process all of the actual parameters (left-to-right)
+			Annotate(expr);
+		
+		if(!Table.isPresent(static_dispatch.typeid))
+			reportError(filename, static_dispatch.lineNo, "Static dispatch to undefined class " + static_dispatch.typeid);
+
+		else if(Table.conformsTo(!static_dispatch.caller.type, static_dispatch.typeid))
+			reportError(filename, static_dispatch.lineNo, "Expression type " + static_dispatch.caller.type + " does not conform to declared static dispatch type " + static_dispatch.typeid);
+		
+		else {
+			m = Table.getMethod(static_dispatch.typeid, static_dispatch.name);
+			if(m != null) {
+				static_dispatch.type = m.typeid;
+				if(static_dispatch.actuals.size() != m.formals.size())
+					reportError(filename, static_dispatch.lineNo, "Method " + m.name + " invoked with wrong number of arguments.");
+				else {
+					for(int i = 0; i < static_dispatch.actuals.size(); i++) {
+						if(Table.conformsTo(!static_dispatch.actuals.get(i).type, m.formals.get(i).typeid))
+							reportError(filename, static_dispatch.lineNo, "In call of method " + m.name + ", type " + static_dispatch.actuals.get(i).type + " does not conform to declared type " + m.formals.get(i).typeid);			
+					}
+				}
+				return ;	
+			}
+			reportError(filename, static_dispatch.lineNo, "Static dispatch to undefined method " + static_dispatch.name);
+		}
+		static_dispatch.type = "Object";
+	}
+	
 	
 	private void Annotate(AST.assign assign)
 	{
