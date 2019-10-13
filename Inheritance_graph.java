@@ -38,7 +38,7 @@ public class Inheritance_graph{
 		Graph.add(new ArrayList <Integer>());
 
 		List <String> no_redef = Arrays.asList("Object", "String", "Int", "Bool", "IO");// According to manual this classes cannot have redefintions
-		List <String> no_inherit = Arrays.asList("String", "Int", "Bool");// No class ca  inherit from this set of classes
+		List <String> no_inherit = Arrays.asList("String", "Int", "Bool");// No class can  inherit from this set of classes
 		size=2;
 		for(AST.class_ class_object : classes){
 			if(no_redef.contains(class_object.name)){

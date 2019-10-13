@@ -67,6 +67,8 @@ public class Semantic{
 	private void Annotate(AST.attr a)
 	{
 		AST.attr a_self = scopeTable.lookUpLocal("self");
+		if(!Table.isPresent(a.typeid))
+			reportError(filename, a.lineNo, " Class " + a.typeid+" of attribute "+a.name+" is undefined");
 		if(a.value instanceof AST.no_expr) a.value.type = "_no_type";
 		else 
 		{
@@ -87,8 +89,12 @@ public class Semantic{
 			if(at == null)
 				scopeTable.insert(f.name, new AST.attr(f.name, f.typeid, new AST.no_expr(f.lineNo), f.lineNo));
 			else 
-				reportError(filename, f.lineNo, "Formal parameter " + f.name + " is multiply defined.");
+				reportError(filename, f.lineNo, "Formal parameter " + f.name + " is defined multiple times in method "+ m.name);
 
+		}
+		if(!Table.isPresent(m.typeid)){
+			reportError(filename, m.lineNo, " Return type " + m.typeid+" of method "+m.name+" is undefined");
+			return;
 		}
 
 		Annotate(m.body);
@@ -288,7 +294,7 @@ public class Semantic{
 		if (!(let.value instanceof AST.no_expr)){
 			Annotate(let.value);
 			if(!Table.conformsTo(let.value.type, let.typeid))
-				reportError(filename, let.lineNo, "Inferred type of " + let.value.type + " of initialization" + "of " + let.name + " does not conform to idenitifier's declared type " + let.typeid);
+				reportError(filename, let.lineNo, "Inferred type of " + let.value.type + " of initialization of " + let.name + " in 'let' does not conform to idenitifier's declared type " + let.typeid);
 		}
 		scopeTable.enterScope();
 		scopeTable.insert(let.name, new AST.attr(let.name, let.typeid, let.value, let.lineNo));// we do this because if we have multiple same entries then the previous entries are overridden as mentioned in cool manual
@@ -310,48 +316,48 @@ public class Semantic{
 	private void Annotate(AST.plus plus){
 		Annotate(plus.e1);
 		Annotate(plus.e2);
-		if(!plus.e1.type.equals("Int") && !plus.e1.type.equals("Int")){
-			reportError(filename, plus.lineNo, "non-Int arguments: " + plus.e1.type + " , " + plus.e2.type);
+		if(!plus.e1.type.equals("Int") && !plus.e2.type.equals("Int")){
+			reportError(filename, plus.lineNo, "non-Int arguments: " + plus.e1.type + " , " + plus.e2.type + " on operator '+'");
 		}else if(!plus.e1.type.equals("Int")){
-			reportError(filename, plus.lineNo, "non-Int argument: " + plus.e1.type);
+			reportError(filename, plus.lineNo, "non-Int argument: in LHS of type " + plus.e1.type+ " on '+'");
 		}else if(!plus.e2.type.equals("Int")){
-			reportError(filename, plus.lineNo, "non-Int argument: " + plus.e2.type);
+			reportError(filename, plus.lineNo, "non-Int argument: in RHS of type " + plus.e2.type+ " on '+'");
 		}
 		plus.type="Int";
 	}
 	private void Annotate(AST.sub sub){
 		Annotate(sub.e1);
 		Annotate(sub.e2);
-		if(!sub.e1.type.equals("Int") && !sub.e1.type.equals("Int")){
-			reportError(filename, sub.lineNo, "non-Int arguments: " + sub.e1.type + " , " + sub.e2.type);
+		if(!sub.e1.type.equals("Int") && !sub.e2.type.equals("Int")){
+			reportError(filename, sub.lineNo, "non-Int arguments: " + sub.e1.type + " , " + sub.e2.type+ " on operator '-'");
 		}else if(!sub.e1.type.equals("Int")){
-			reportError(filename, sub.lineNo, "non-Int argument: " + sub.e1.type);
+			reportError(filename, sub.lineNo, "non-Int argument: in LHS of type " + sub.e1.type+ " on operator '-'");
 		}else if(!sub.e2.type.equals("Int")){
-			reportError(filename, sub.lineNo, "non-Int argument: " + sub.e2.type);
+			reportError(filename, sub.lineNo, "non-Int argument: in RHS of type" + sub.e2.type+ " on operator '-'");
 		}
 		sub.type="Int";
 	}
 	private void Annotate(AST.mul mul){
 		Annotate(mul.e1);
 		Annotate(mul.e2);
-		if(!mul.e1.type.equals("Int") && !mul.e1.type.equals("Int")){
-			reportError(filename, mul.lineNo, "non-Int arguments: " + mul.e1.type + " , " + mul.e2.type);
+		if(!mul.e1.type.equals("Int") && !mul.e2.type.equals("Int")){
+			reportError(filename, mul.lineNo, "non-Int arguments: " + mul.e1.type + " , " + mul.e2.type+ " on operator '*'");
 		}else if(!mul.e1.type.equals("Int")){
-			reportError(filename, mul.lineNo, "non-Int argument: " + mul.e1.type);
+			reportError(filename, mul.lineNo, "non-Int argument: in LHS of type " + mul.e1.type+ " on operator '*'");
 		}else if(!mul.e2.type.equals("Int")){
-			reportError(filename, mul.lineNo, "non-Int argument: " + mul.e2.type);
+			reportError(filename, mul.lineNo, "non-Int argument: in RHS of type " + mul.e2.type+ " on operator '*'");
 		}
 		mul.type="Int";
 	}
 	private void Annotate(AST.divide divide){
 		Annotate(divide.e1);
 		Annotate(divide.e2);
-		if(!divide.e1.type.equals("Int") && !divide.e1.type.equals("Int")){
-			reportError(filename, divide.lineNo, "non-Int arguments: " + divide.e1.type + " , " + divide.e2.type);
+		if(!divide.e1.type.equals("Int") && !divide.e2.type.equals("Int")){
+			reportError(filename, divide.lineNo, "non-Int arguments: " + divide.e1.type + " , " + divide.e2.type+ " on operator '/'");
 		}else if(!divide.e1.type.equals("Int")){
-			reportError(filename, divide.lineNo, "non-Int argument: " + divide.e1.type);
+			reportError(filename, divide.lineNo, "non-Int argument: in LHS of type" + divide.e1.type+ " on operator '/'");
 		}else if(!divide.e2.type.equals("Int")){
-			reportError(filename, divide.lineNo, "non-Int argument: " + divide.e2.type);
+			reportError(filename, divide.lineNo, "non-Int argument: in RHS of type" + divide.e2.type+ " on operator '/'");
 		}
 		divide.type="Int";
 	}

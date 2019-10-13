@@ -62,7 +62,7 @@ public class BuildTable
 			{
 				AST.attr variable = (AST.attr) f;
 				if(newaList.containsKey(variable.name))
-					reportError(cl.filename, variable.lineNo, "Attribute " + variable.name + " is multiply defined in class.");
+					reportError(cl.filename, variable.lineNo, "Attribute " + variable.name + " is defined multiple times in class "+ cl.name);
 				else
 					newaList.put(variable.name, variable);
 			}
@@ -70,7 +70,7 @@ public class BuildTable
 			{
 				AST.method method = (AST.method) f;
 				if(newmList.containsKey(method.name))
-					reportError(cl.filename, method.lineNo, "Method " + method.name + " is multiply defined.");
+					reportError(cl.filename, method.lineNo, "Method " + method.name + " is defined multiple times in class "+ cl.name);
 				else
 					newmList.put(method.name, method);
 			}
@@ -82,7 +82,7 @@ public class BuildTable
 			{
 				AST.attr att = (AST.attr) f;
 				if(newaList.containsKey(att.name))
-					reportError(cl.filename, newaList.get(att.name).lineNo, "Attribute " + att.name + "of class " + cl.name + " is an attribute of the inherited class " + cl.parent);
+					reportError(cl.filename, newaList.get(att.name).lineNo, "Cannot redifine : Attribute " + att.name + " of class " + cl.name + " is an attribute of the inherited class " + cl.parent);
 				else newaList.put(att.name, att);
 			}
 			else if(f instanceof AST.method)
