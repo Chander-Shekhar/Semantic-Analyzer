@@ -23,13 +23,13 @@ public class Inheritance_graph{
 		List <String> no_inherit = Arrays.asList("String", "Int", "Bool");
 		Graph = new ArrayList< ArrayList <Integer> >();
 
-		Class_to_Int.put(Table.getObject(),0);
-		Int_to_Class.put(0,Table.getObject());
-		Name_to_Class.put(Table.getObject().name,Table.getObject());
+		Class_to_Int.put(Table.getClass("Object"),0);
+		Int_to_Class.put(0,Table.getClass("Object"));
+		Name_to_Class.put(Table.getClass("Object").name,Table.getClass("Object"));
 
-		Class_to_Int.put(Table.getIO(),1);
-		Int_to_Class.put(1,Table.getIO());	
-		Name_to_Class.put(Table.getIO().name,Table.getIO());
+		Class_to_Int.put(Table.getClass("IO"),1);
+		Int_to_Class.put(1,Table.getClass("IO"));	
+		Name_to_Class.put(Table.getClass("IO").name,Table.getClass("IO"));
 		
 		Graph.add(new ArrayList <Integer> (Arrays.asList(1)));
 		Graph.add(new ArrayList <Integer>());
@@ -79,7 +79,9 @@ public class Inheritance_graph{
 		if(visited[v]){
 			visited[size]=true;
 			boolean visit[]= new boolean[size];
-			print_cycle_classes(v,visit);
+			ArrayList<String> Cycle = new ArrayList<String>();
+			print_cycle_classes(v,visit,Cycle);
+			System.err.println(Int_to_Class.get(v).filename+" : "+Int_to_Class.get(v).lineNo+" :Classes "+ Cycle+" or their ancestors are a part of a cycle");
 			// System.err.println(Int_to_Class.get(v).filename+" : "+Int_to_Class.get(v).lineNo+" : Class " +Int_to_Class.get(v).name + ", or an ancestor of "+ Int_to_Class.get(v).name+ ", is involved in an inheritance cycle");
 			return ;
 		}
@@ -90,12 +92,13 @@ public class Inheritance_graph{
 		}
 	}
 
-	public void print_cycle_classes(int v, boolean visited[]){
+	public void print_cycle_classes(int v, boolean visited[],ArrayList<String> Cycle){
 		visited[v]=true;
-		System.err.println(Int_to_Class.get(v).filename+" : "+Int_to_Class.get(v).lineNo+" : Class " +Int_to_Class.get(v).name + ", or an ancestor of "+ Int_to_Class.get(v).name+ ", is involved in an inheritance cycle");
+		Cycle.add(Int_to_Class.get(v).name);
+		// System.err.println(Int_to_Class.get(v).filename+" : "+Int_to_Class.get(v).lineNo+" : Class " +Int_to_Class.get(v).name + ", or an ancestor of "+ Int_to_Class.get(v).name+ ", is involved in an inheritance cycle");
 		for(int i=0;i<Graph.get(v).size();i++){
 			int n=Graph.get(v).get(i);
-			if(!visited[n]) print_cycle_classes(n,visited);
+			if(!visited[n]) print_cycle_classes(n,visited,Cycle);
 		}
 	}
 
@@ -104,7 +107,8 @@ public class Inheritance_graph{
 		Q.add(0);
 		while(!Q.isEmpty()){
 			int i=Q.poll();
-			Table.insert(Int_to_Class.get(i));
+			// System.err.println(Int_to_Class.get(i).name+" "+ Int_to_Class.get(i).parent);
+			if(i>1) Table.insert(Int_to_Class.get(i));
 			for(int j=0;j<Graph.get(i).size();j++){
 				Q.add(Graph.get(i).get(j));
 			}

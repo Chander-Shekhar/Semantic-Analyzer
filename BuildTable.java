@@ -4,15 +4,18 @@ import java.util.Map.Entry;
 
 public class BuildTable
 {
-	private List<Error> err = new ArrayList<Error>();
 	private HashMap<String, AST.class_> classList = new HashMap<String, AST.class_>();
+
+	public void reportError(String filename, int lineNo, String error){
+		System.err.println(filename+":"+lineNo+": "+error);
+	}
 
 	public BuildTable()
 	{
 		List<AST.feature> mObject = new ArrayList<AST.feature>();
 		mObject.add(new AST.method("abort", new ArrayList<AST.formal>(), "Object", new AST.no_expr(0), 0));
 		mObject.add(new AST.method("type_name", new ArrayList<AST.formal>(), "String", new AST.no_expr(0), 0));
-		classList.put("Object", new AST.class_("Object", "", "Object", mObject, 0));
+		classList.put("Object", new AST.class_("Object", "", null, mObject, 0));
 
 		List<AST.feature> mIO = new ArrayList<AST.feature>();
 		List<AST.formal> out_stringFormals = new ArrayList<AST.formal>();
@@ -59,7 +62,7 @@ public class BuildTable
 			{
 				AST.attr variable = (AST.attr) f;
 				if(newaList.containsKey(variable.name))
-					err.add(new Error(cl.filename, variable.lineNo, "Attribute " + variable.name + " is multiply defined in class."));
+					reportError(cl.filename, variable.lineNo, "Attribute " + variable.name + " is multiply defined in class.");
 				else
 					newaList.put(variable.name, variable);
 			}
@@ -67,7 +70,7 @@ public class BuildTable
 			{
 				AST.method method = (AST.method) f;
 				if(newmList.containsKey(method.name))
-					err.add(new Error(cl.filename, method.lineNo, "Method " + method.name + " is multiply defined."));
+					reportError(cl.filename, method.lineNo, "Method " + method.name + " is multiply defined.");
 				else
 					newmList.put(method.name, method);
 			}
@@ -79,7 +82,7 @@ public class BuildTable
 			{
 				AST.attr att = (AST.attr) f;
 				if(newaList.containsKey(att.name))
-					err.add(new Error(cl.filename, newaList.get(att.name).lineNo, "Attribute " + att.name + " is an attribute of an inherited class"));
+					reportError(cl.filename, newaList.get(att.name).lineNo, "Attribute " + att.name + " is an attribute of an inherited class");
 				else newaList.put(att.name, att);
 			}
 			else if(f instanceof AST.method)
@@ -91,23 +94,21 @@ public class BuildTable
 					AST.method mchild = newmList.get(m.name);
 					if(m.formals.size() != mchild.formals.size())
 					{
-						err.add(new Error(cl.filename, mchild.lineNo, "Incompatible number of formal parameters in redefined method " + m.name));
+						reportError(cl.filename, mchild.lineNo, "Incompatible number of formal parameters in redefined method " + m.name);
 						flag = true;
 					}
 					else 
 					{
 						if(m.typeid.equals(mchild.typeid) == false)
 						{
-							err.add(new Error(cl.filename, mchild.lineNo,  "In redefined method " + m.name + ", return type "
-								+ mchild.typeid + " is different from original return type " + m.typeid));
+							reportError(cl.filename, mchild.lineNo,  "In redefined method " + m.name + ", return type "	+ mchild.typeid + " is different from original return type " + m.typeid);
 							flag = true;
 						}
 						for(int i=0;i<m.formals.size();i++)
 						{
 							if(m.formals.get(i).typeid.equals(mchild.formals.get(i).typeid) == false)
 							{
-								err.add(new Error(cl.filename, mchild.lineNo, "In redefined method " + m.name + ", parameter type"
-									+ mchild.formals.get(i).typeid + " is different from original type " + m.formals.get(i).typeid));
+								reportError(cl.filename, mchild.lineNo, "In redefined method " + m.name + ", parameter type" + mchild.formals.get(i).typeid + " is different from original type " + m.formals.get(i).typeid);
 								flag = true;
 							}
 						}
@@ -124,17 +125,17 @@ public class BuildTable
 
 	}
 
-	List<Error> getErrors()
+	public HashMap<String, AST.attr> getAttrs(AST.class_ cl)
 	{
-		return err;
-	}
-
-	List<AST.attr> getAttr(String cname)
-	{
-		List<AST.attr> Attrs = new ArrayList<AST.attr>();
-		for(AST.feature f : classList.get(cname).features)
+		HashMap<String, AST.attr> Attrs = new HashMap<String, AST.attr>();
+		for(AST.feature f : cl.features)
+		{
 			if(f instanceof AST.attr)
-				Attrs.add((AST.attr) f);
+			{
+				AST.attr e = (AST.attr) f;
+				Attrs.put(e.name, e);
+			}
+		}
 		return Attrs;
 	}
 
@@ -147,18 +148,7 @@ public class BuildTable
 		return classList.get(cname);
 	}
 
-	public AST.method getMethod(String cname, String mname)
-	{
-		AST.class_ cl = classList.get(cname);
-		for(AST.feature f : cl.features)
-		{
-			if(f instanceof AST.method &&  mname.equals(f.name))
-				return (AST.method) f;
-		}
-		return null;
-	}
-	
-	boolean conformsTo(String c1, String c2)
+	public boolean conformsTo(String c1, String c2)
 	{
 		if(c1 == null) return false;
 		if(c1.equals(c2)) return true;
@@ -170,11 +160,21 @@ public class BuildTable
 		}
 	}
 
-	String commonAncestor(String c1, String c2)
+	public String commonAncestor(String c1, String c2)
 	{
 		if(conformsTo(c1, c2)) return c2;
 		else if(conformsTo(c2, c1)) return c1;
 		else return commonAncestor(classList.get(c1).parent, c2);
 	}
 
+	public AST.method getMethod(String cname, String mname)
+	{
+		AST.class_ cl = classList.get(cname);
+		for(AST.feature f : cl.features)
+		{
+			if(f instanceof AST.method &&  mname.equals(((AST.method) f).name))
+				return (AST.method) f;
+		}
+		return null;
+	}
 }

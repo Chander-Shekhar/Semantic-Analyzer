@@ -27,6 +27,27 @@ public class Semantic{
 		inGraph.isDAG();
 		inGraph.insert_classes(Table);
 		
+		for(AST.class_ e : program.classes) {
+			filename = e.filename;				
+			scopeTable.enterScope();
+			scopeTable.insert("self", new AST.attr("self", e.name, new AST.no_expr(e.lineNo), e.lineNo));
+			scopeTable.maps.get(scopeTable.scope).putAll(Table.getAttrs(e));		
+			Annotate(e);
+			scopeTable.exitScope();				
+		}
+		if(!Table.isPresent("Main")){
+			reportError(filename, 1, "Program does not contain class 'Main'");
+		}else
+		{
+			AST.method m = Table.getMethod("Main","main");
+			if(m == null){
+				reportError(filename, 1, "'Main' class does not contain 'main' method");
+			}
+			else if(!m.formals.isEmpty()) 
+			{
+				reportError(filename, 1, "'main' method in class Main should have no arguments.");
+			}
+		}
 	}
 
 
@@ -45,6 +66,7 @@ public class Semantic{
 
 	private void Annotate(AST.attr a)
 	{
+		AST.attr a_self = scopeTable.lookUpLocal("self");
 		if(a.value instanceof AST.no_expr) a.value.type = "_no_type";
 		else 
 		{
@@ -56,6 +78,7 @@ public class Semantic{
 
 	private void Annotate(AST.method m)
 	{
+		AST.attr a_self = scopeTable.lookUpLocal("self");
 		scopeTable.enterScope();
 
 		for(AST.formal f : m.formals)
@@ -70,18 +93,18 @@ public class Semantic{
 
 		Annotate(m.body);
 
-		if(!Table.conformsTo(m.typeid, m.body.type))
+		if(!Table.conformsTo(m.body.type, m.typeid))
 			reportError(filename, m.body.lineNo, "Inferred return type " + m.body.type + " of method " + m.name + " does not conform to declared return type " + m.typeid);
 		scopeTable.exitScope();
 	}
 
 	private void Annotate(AST.expression expr){
 	 	if(expr instanceof AST.int_const)
-			Annotate((AST.int_const)expr);
+			expr.type="Int";
 		else if(expr instanceof AST.string_const)
-			Annotate((AST.string_const)expr);
-		else if(expr instanceof AST.bool_const)
-			Annotate((AST.bool_const)expr);
+			expr.type="String";
+		else if(expr instanceof AST.bool_const || expr instanceof AST.isvoid )
+			expr.type="Bool";
 		else if(expr instanceof AST.object)
 			Annotate((AST.object)expr);
 	 	else if(expr instanceof AST.assign)
@@ -102,8 +125,6 @@ public class Semantic{
 			Annotate((AST.let)expr);
 		else if(expr instanceof AST.new_)
 			Annotate((AST.new_)expr);
-		else if(expr instanceof AST.isvoid)
-			Annotate((AST.isvoid)expr);
 		else if(expr instanceof AST.plus)
 			Annotate((AST.plus)expr);
 		else if(expr instanceof AST.sub)
@@ -124,21 +145,10 @@ public class Semantic{
 			Annotate((AST.neg)expr);
 	}
 
-	private void Annotate(AST.int_const inte){
-		inte.type = "Int";
-	}
-	private void Annotate(AST.string_const String){
-		String.type = "String";
-	}
-	private void Annotate(AST.bool_const bool){
-		bool.type = "Bool";
-	}
-
 	private void Annotate(AST.dispatch dispatch){
 		AST.method m;
 		boolean found = false;
 		Annotate(dispatch.caller);				// first process the caller.
-		
 		for(AST.expression expr : dispatch.actuals)	// then process all of the actual parameters (left-to-right)
 			Annotate(expr);
 		
@@ -152,13 +162,13 @@ public class Semantic{
 					reportError(filename, dispatch.lineNo, "Method " + m.name + " invoked with wrong number of arguments.");
 				else {
 					for(int i = 0; i < dispatch.actuals.size(); i++) {
-						if(Table.conformsTo(!dispatch.actuals.get(i).type, m.formals.get(i).typeid))
+						if(!Table.conformsTo(dispatch.actuals.get(i).type, m.formals.get(i).typeid))
 							reportError(filename, dispatch.lineNo, "In call of method " + m.name + ", type " + dispatch.actuals.get(i).type + " does not conform to declared type " + m.formals.get(i).typeid);			
 					}
 				}
 				return ;	
 			}
-			reportError(filename, dispatch.lineNo, "Static dispatch to undefined method " + dispatch.name);
+			reportError(filename, dispatch.lineNo, "Dispatch to undefined method " + dispatch.name);
 		}
 		dispatch.type = "Object";
 	}
@@ -174,7 +184,7 @@ public class Semantic{
 		if(!Table.isPresent(static_dispatch.typeid))
 			reportError(filename, static_dispatch.lineNo, "Static dispatch to undefined class " + static_dispatch.typeid);
 
-		else if(Table.conformsTo(!static_dispatch.caller.type, static_dispatch.typeid))
+		else if(!Table.conformsTo(static_dispatch.caller.type, static_dispatch.typeid))
 			reportError(filename, static_dispatch.lineNo, "Expression type " + static_dispatch.caller.type + " does not conform to declared static dispatch type " + static_dispatch.typeid);
 		
 		else {
@@ -185,7 +195,7 @@ public class Semantic{
 					reportError(filename, static_dispatch.lineNo, "Method " + m.name + " invoked with wrong number of arguments.");
 				else {
 					for(int i = 0; i < static_dispatch.actuals.size(); i++) {
-						if(Table.conformsTo(!static_dispatch.actuals.get(i).type, m.formals.get(i).typeid))
+						if(!Table.conformsTo(static_dispatch.actuals.get(i).type, m.formals.get(i).typeid))
 							reportError(filename, static_dispatch.lineNo, "In call of method " + m.name + ", type " + static_dispatch.actuals.get(i).type + " does not conform to declared type " + m.formals.get(i).typeid);			
 					}
 				}
@@ -196,14 +206,13 @@ public class Semantic{
 		static_dispatch.type = "Object";
 	}
 	
-	
 	private void Annotate(AST.assign assign)
 	{
 		Annotate(assign.e1);
 		AST.attr tmp = scopeTable.lookUpGlobal(assign.name);
 		if(tmp == null)
 			reportError(filename, assign.lineNo, "Assignment to undeclared variable " + assign.name);
-		else if(!Table.conformsTo(tmp.typeid, assign.e1.type))
+		else if(!Table.conformsTo(assign.e1.type, tmp.typeid))
 			reportError(filename, assign.lineNo, "Type " + assign.e1.type + " of assigned expression does not conform to declared type " + tmp.typeid + " of identifier " + tmp.name);
 
 		assign.type = assign.e1.type;
@@ -217,6 +226,8 @@ public class Semantic{
 		Annotate(cond.ifbody);
 		Annotate(cond.elsebody);
 		cond.type = Table.commonAncestor(cond.ifbody.type, cond.elsebody.type);
+
+
 	}
 	private void Annotate(AST.typcase typcase){
 		Annotate(typcase.predicate);
@@ -256,13 +267,24 @@ public class Semantic{
 		loop.type = "Object";
 	}
 
-	public void Annotate(AST.block block) {
+	private void Annotate(AST.object object)
+	{
+		AST.attr at = scopeTable.lookUpGlobal(object.name);
+		if(at == null) {
+			reportError(filename, object.lineNo, "Undeclared identifier " + object.name);
+			object.type = "Object";
+		}
+		else
+			object.type = at.typeid;
+	}
+
+	private void Annotate(AST.block block) {
 		for(AST.expression expr : block.l1)
 			Annotate(expr);
 		block.type = block.l1.get(block.l1.size()-1).type;
 	}
 
-	public void Annotate(AST.let let){
+	private void Annotate(AST.let let){
 		if (!(let.value instanceof AST.no_expr)){
 			Annotate(let.value);
 			if(!Table.conformsTo(let.value.type, let.typeid))
