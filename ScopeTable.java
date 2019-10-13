@@ -1,8 +1,8 @@
 package cool;
 import java.util.*;
 public class ScopeTable<T> {
-	public int scope;
-	public ArrayList<HashMap<String, T>> maps=new ArrayList<HashMap<String, T>>();
+	private int scope;
+	private ArrayList<HashMap<String, T>> maps=new ArrayList<HashMap<String, T>>();
 	public ScopeTable(){
 		scope = 0;
 		maps.add(new HashMap<String, T>());
@@ -30,4 +30,13 @@ public class ScopeTable<T> {
 		}
 		return null;
 	}
+
+	public ArrayList<HashMap<String, T>> getMap (){
+		return maps;
+	}
+
+	public int getScope (){
+		return scope;
+	}
+
 }

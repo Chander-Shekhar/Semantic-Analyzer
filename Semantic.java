@@ -28,10 +28,10 @@ public class Semantic{
 		inGraph.insert_classes(Table);
 		
 		for(AST.class_ e : program.classes) {
-			filename = e.filename;				
+			filename = e.filename;
 			scopeTable.enterScope();
 			scopeTable.insert("self", new AST.attr("self", e.name, new AST.no_expr(e.lineNo), e.lineNo));
-			scopeTable.maps.get(scopeTable.scope).putAll(Table.getAttrs(e));		
+			scopeTable.getMap().get(scopeTable.getScope()).putAll(Table.getAttrs(e.name));
 			Annotate(e);
 			scopeTable.exitScope();				
 		}
@@ -297,7 +297,7 @@ public class Semantic{
 		scopeTable.exitScope();
 	}
 	private void Annotate(AST.new_ new_){
-		if(Table.isPresent(new_.typeid)){
+		if(!Table.isPresent(new_.typeid)){
 			reportError(filename, new_.lineNo, "'new' used with undefined class " + new_.typeid);
 			new_.type="Object";
 		}

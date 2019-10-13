@@ -3,27 +3,30 @@ package cool;
 import java.util.*;
 
 public class Inheritance_graph{
-	private Integer size;
+	private Integer size;                          // size it is used to populate the graph and other maps it is has the dynamic size of entered classes
 
-	private Map<AST.class_, Integer> Class_to_Int;
+	private Map<AST.class_, Integer> Class_to_Int; // Map for containing hashmap from class to int 
 
-	private Map<Integer, AST.class_> Int_to_Class;
+	private Map<Integer, AST.class_> Int_to_Class; // Map for containing hashmap from int to class
 
-	private Map<String, AST.class_> Name_to_Class;
+	private Map<String, AST.class_> Name_to_Class; // Map for containing hashmap from class name to class
 
-	private ArrayList< ArrayList <Integer> > Graph;
+	private ArrayList< ArrayList <Integer> > Graph;//List of Lists to store the child nodes in a graph as we know we have one
+												   // common root Object which can be later used for traversing through the graph  
 
-	public Inheritance_graph(List<AST.class_> classes, BuildTable Table){
+	public Inheritance_graph(List<AST.class_> classes, BuildTable Table){//constructor intializes all the maps and graph 
+				 														 // along with this it populates the inheritance graph or we can say the List of Lists 
 		Class_to_Int = new HashMap<AST.class_, Integer>();
 
 		Int_to_Class = new HashMap<Integer, AST.class_>();
 
 		Name_to_Class = new HashMap<String, AST.class_>();
-		List <String> no_redef = Arrays.asList("Object", "String", "Int", "Bool", "IO");
-		List <String> no_inherit = Arrays.asList("String", "Int", "Bool");
 		Graph = new ArrayList< ArrayList <Integer> >();
 
-		Class_to_Int.put(Table.getClass("Object"),0);
+		/*first adding Object and IO in the graph as other classes can inherit from Object and IO and these are predefined
+		  alongwith giving them an integer which records the order in which they came in 
+		*/
+		Class_to_Int.put(Table.getClass("Object"),0); 
 		Int_to_Class.put(0,Table.getClass("Object"));
 		Name_to_Class.put(Table.getClass("Object").name,Table.getClass("Object"));
 
@@ -34,6 +37,8 @@ public class Inheritance_graph{
 		Graph.add(new ArrayList <Integer> (Arrays.asList(1)));
 		Graph.add(new ArrayList <Integer>());
 
+		List <String> no_redef = Arrays.asList("Object", "String", "Int", "Bool", "IO");// According to manual this classes cannot have redefintions
+		List <String> no_inherit = Arrays.asList("String", "Int", "Bool");// No class ca  inherit from this set of classes
 		size=2;
 		for(AST.class_ class_object : classes){
 			if(no_redef.contains(class_object.name)){

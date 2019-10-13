@@ -51,7 +51,7 @@ public class BuildTable
 
 	public void insert(AST.class_ cl)
 	{
-		AST.class_ newClass = new AST.class_(cl.name, cl.filename, cl.parent, classList.get(cl.parent).features, cl.lineNo);
+		AST.class_ newClass = new AST.class_(cl.name, cl.filename, cl.parent, new ArrayList<AST.feature>(), cl.lineNo);
 
 		HashMap<String, AST.attr> newaList = new HashMap<String, AST.attr>();
 		HashMap<String, AST.method> newmList = new HashMap<String, AST.method>();
@@ -76,13 +76,13 @@ public class BuildTable
 			}
 		}
 
-		for(AST.feature f : newClass.features)
+		for(AST.feature f : classList.get(cl.parent).features)
 		{
 			if(f instanceof AST.attr)
 			{
 				AST.attr att = (AST.attr) f;
 				if(newaList.containsKey(att.name))
-					reportError(cl.filename, newaList.get(att.name).lineNo, "Attribute " + att.name + " is an attribute of an inherited class");
+					reportError(cl.filename, newaList.get(att.name).lineNo, "Attribute " + att.name + "of class " + cl.name + " is an attribute of the inherited class " + cl.parent);
 				else newaList.put(att.name, att);
 			}
 			else if(f instanceof AST.method)
@@ -118,16 +118,24 @@ public class BuildTable
 				if(flag) newmList.put(m.name, m);
 			}
 		}
-		newClass.features.clear();
 		newClass.features.addAll(newaList.values());
 		newClass.features.addAll(newmList.values());
 		classList.put(cl.name, newClass);
-
+		// System.out.println(newClass.name);
+		// for(AST.feature f : newClass.features)
+		// {
+		// 	if(f instanceof AST.attr)
+		// 	System.out.print(((AST.attr)f).name + " ");
+		// 	else if(f instanceof AST.method)
+		// 	System.out.print(((AST.method)f).name + " ");
+		// }
+		// System.out.println();
 	}
 
-	public HashMap<String, AST.attr> getAttrs(AST.class_ cl)
+	public HashMap<String, AST.attr> getAttrs(String cname)
 	{
 		HashMap<String, AST.attr> Attrs = new HashMap<String, AST.attr>();
+		AST.class_ cl = getClass(cname);
 		for(AST.feature f : cl.features)
 		{
 			if(f instanceof AST.attr)
