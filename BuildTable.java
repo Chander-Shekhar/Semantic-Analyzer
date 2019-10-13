@@ -148,7 +148,11 @@ public class BuildTable
 		return Attrs;
 	}
 
-	AST.class_ getClass(String cname)
+	public boolean isPresent(String cname){
+		return classList.containsKey(cname);
+	}
+
+	public AST.class_ getClass(String cname)
 	{
 		return classList.get(cname);
 	}
