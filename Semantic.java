@@ -20,33 +20,36 @@ public class Semantic{
 	private String filename;
 	public Semantic(AST.program program){
 		//Write Semantic analyzer code here
-		Table = new BuildTable();//initializing attributes
+		// Initializing attributes
+		Table = new BuildTable();	
 		scopeTable = new ScopeTable<AST.attr>();
 		Inheritance_graph inGraph = new Inheritance_graph(program.classes, Table);// intializing the inheritance graph
-		inGraph.buildGraph(program.classes);//inheritance graph forms in this step
-		inGraph.isDAG();//checks for cycles if they are present the program is halted 
-		inGraph.insert_classes(Table);// using inheritance graph each classes is added in a table and their feature list is updated
+		inGraph.buildGraph(program.classes); //Builds the inheritance graph in this step
+		inGraph.isDAG();	//checks for cycles if they are present the program is halted 
+		inGraph.insert_classes(Table);	// using inheritance graph each class is added in the table and their feature list is updated
 		
-		if(Table.getErrorFlag())
+		if(Table.getErrorFlag()) //If there was some error while populating the Table with classes, sets the errorFlag.
 			errorFlag = true;
 		
-		for(AST.class_ e : program.classes) {//building scope table
+		for(AST.class_ e : program.classes) {
 			filename = e.filename;
-			scopeTable.enterScope();
+			//For each class, enter a new scope in the scopeTable.
+			scopeTable.enterScope();	
 			scopeTable.insert("self", new AST.attr("self", e.name, new AST.no_expr(e.lineNo), e.lineNo));
+			//Add all the attributes of the class to the scopeTable including self.
 			scopeTable.getMap().get(scopeTable.getScope()).putAll(Table.getAttrs(e.name));
-			Annotate(e);
-			scopeTable.exitScope();				
+			Annotate(e);	//Annotate the class .
+			scopeTable.exitScope();	//Exit the current scope.	
 		}
-		if(!Table.isPresent("Main")){//throwing error if Main classes is absent
+		if(!Table.isPresent("Main")){	//throw error if Main class is absent
 			reportError(filename, 1, "Program does not contain class 'Main'");
 		}else
 		{
 			AST.method m = Table.getMethod("Main","main");
-			if(m == null){//throwing error if main method is not their in main
+			if(m == null){		//throw error if main method is not there in class Main.
 				reportError(filename, 1, "'Main' class does not contain 'main' method");
 			}
-			else if(!m.formals.isEmpty()) // throwing error if arguments are passed to main
+			else if(!m.formals.isEmpty()) // throw error if arguments are passed to main
 			{
 				reportError(filename, 1, "'main' method in class Main should have no arguments.");
 			}
@@ -54,7 +57,7 @@ public class Semantic{
 	}
 
 
-	private void Annotate(AST.class_ cl)
+	private void Annotate(AST.class_ cl) //Calls Annotate on every feature of the class i.e. attributes and methods.
 	{
 		for(AST.feature f : cl.features)
 		{
@@ -67,26 +70,27 @@ public class Semantic{
 		}
 	}
 
-	private void Annotate(AST.attr a)
+	private void Annotate(AST.attr a)	// Checks for type errors of an attribute and annotates it with appropriate type.
 	{
 		AST.attr a_self = scopeTable.lookUpLocal("self");
-		if(!Table.isPresent(a.typeid))
+		if(!Table.isPresent(a.typeid))	// Error if declared type of an attribute is undefined.
 			reportError(filename, a.lineNo, " Class " + a.typeid+" of attribute "+a.name+" is undefined");
 		if(a.value instanceof AST.no_expr) a.value.type = "_no_type";
 		else 
 		{
 			Annotate(a.value);
+			//Error If the type annotated to value of attribute doesn't conform with the declared type.
 			if(!Table.conformsTo(a.value.type, a.typeid))
 				reportError(filename, a.value.lineNo, "Inferred type " + a.value.type + " of initialization of attribute "+ a.name + " does not conform to declared type " + a.typeid);
 		}
 	}
 
-	private void Annotate(AST.method m)
+	private void Annotate(AST.method m)  // Checks for type errors of an method.
 	{
 		AST.attr a_self = scopeTable.lookUpLocal("self");
 		scopeTable.enterScope();
 
-		for(AST.formal f : m.formals)
+		for(AST.formal f : m.formals) //Error if a particular parameter of a method is defined multiple times Otherwise add it to the scopeTable.
 		{
 			AST.attr at = scopeTable.lookUpLocal(f.name); 
 			if(at == null)
@@ -95,19 +99,24 @@ public class Semantic{
 				reportError(filename, f.lineNo, "Formal parameter " + f.name + " is defined multiple times in method "+ m.name);
 
 		}
-		if(!Table.isPresent(m.typeid)){
+		if(!Table.isPresent(m.typeid)){  // Error if return type of method is undefined.
 			reportError(filename, m.lineNo, " Return type " + m.typeid+" of method "+m.name+" is undefined");
 			return;
 		}
 
-		Annotate(m.body);
-
+		Annotate(m.body); 	//Annotate the body.
+		//Error If the type annotated to body of method doesn't conform with the declared return type.
 		if(!Table.conformsTo(m.body.type, m.typeid))
 			reportError(filename, m.body.lineNo, "Inferred return type " + m.body.type + " of method " + m.name + " does not conform to declared return type " + m.typeid);
 		scopeTable.exitScope();
 	}
 
 	private void Annotate(AST.expression expr){
+		/*
+		Checking the type of the expression and calling the corresponding Annonate function to associate the type.
+		After annotating the type with basic expressions, 
+		we can check for type errors in bigger blocks such as attributes, methods, dispatch etc and associate type with them.
+		*/
 	 	if(expr instanceof AST.int_const)
 			expr.type="Int";
 		else if(expr instanceof AST.string_const)
@@ -156,17 +165,18 @@ public class Semantic{
 
 	private void Annotate(AST.dispatch dispatch){
 		AST.method m;
-		boolean found = false;
-		Annotate(dispatch.caller);				// first process the caller.
-		for(AST.expression expr : dispatch.actuals)	// then process all of the actual parameters (left-to-right)
+		Annotate(dispatch.caller);
+		for(AST.expression expr : dispatch.actuals)	// Annotate all of the actual parameters of the method dispatch.
 			Annotate(expr);
-		
+		// Error if type of caller is undefined.
 		if(!Table.isPresent(dispatch.caller.type))
 			reportError(filename, dispatch.lineNo, "Dispatch to undefined class " + dispatch.caller.type);
 		else {
-			m = Table.getMethod(dispatch.caller.type, dispatch.name);
+			m = Table.getMethod(dispatch.caller.type, dispatch.name); //Gets the dispatch method from classList of BuildTable.java
 			if(m != null) {
-				dispatch.type = m.typeid;
+				dispatch.type = m.typeid;	// If such a method exists, associate its type with dispatch.
+				
+				//Error if method is called with wrong no. of arguments or arguments of wrong type.
 				if(dispatch.actuals.size() != m.formals.size())
 					reportError(filename, dispatch.lineNo, "Method " + m.name + " invoked with wrong number of arguments.");
 				else {
@@ -177,29 +187,32 @@ public class Semantic{
 				}
 				return ;	
 			}
+			//If no method corresponding to dispatch is found, Error.
 			reportError(filename, dispatch.lineNo, "Dispatch to undefined method " + dispatch.name);
 		}
+		//If type couldn't be associated with the dispatch, default : Object.
 		dispatch.type = "Object";
 	}
 
 	private void Annotate(AST.static_dispatch static_dispatch) {
 		AST.method m;
-		boolean found = false;
-		Annotate(static_dispatch.caller);				// first process the caller.
+		Annotate(static_dispatch.caller);				
 		
-		for(AST.expression expr : static_dispatch.actuals)	// then process all of the actual parameters (left-to-right)
+		for(AST.expression expr : static_dispatch.actuals)	// Annotate all of the actual parameters of the static dispatch of method.
 			Annotate(expr);
-		
+		// Error if typeid of static_dispatch is undefined.
 		if(!Table.isPresent(static_dispatch.typeid))
 			reportError(filename, static_dispatch.lineNo, "Static dispatch to undefined class " + static_dispatch.typeid);
-
+		// Error if type of caller doesn't conform with static_dispatch.
 		else if(!Table.conformsTo(static_dispatch.caller.type, static_dispatch.typeid))
 			reportError(filename, static_dispatch.lineNo, "Expression type " + static_dispatch.caller.type + " does not conform to declared static dispatch type " + static_dispatch.typeid);
 		
 		else {
-			m = Table.getMethod(static_dispatch.typeid, static_dispatch.name);
+			m = Table.getMethod(static_dispatch.typeid, static_dispatch.name);  //Gets the method from classList of BuildTable.java
 			if(m != null) {
-				static_dispatch.type = m.typeid;
+				static_dispatch.type = m.typeid;  // If such a method exists, associate its type with static_dispatch
+				
+				//Error if method is called with wrong no. of arguments or arguments of wrong type.
 				if(static_dispatch.actuals.size() != m.formals.size())
 					reportError(filename, static_dispatch.lineNo, "Method " + m.name + " invoked with wrong number of arguments.");
 				else {
@@ -210,8 +223,10 @@ public class Semantic{
 				}
 				return ;	
 			}
+			//If no method corresponding to dispatch is found, Error.
 			reportError(filename, static_dispatch.lineNo, "Static dispatch to undefined method " + static_dispatch.name);
 		}
+		//If type couldn't be associated with the dispatch, default : Object
 		static_dispatch.type = "Object";
 	}
 	
@@ -290,7 +305,7 @@ public class Semantic{
 	private void Annotate(AST.block block) {
 		for(AST.expression expr : block.l1)
 			Annotate(expr);
-		block.type = block.l1.get(block.l1.size()-1).type;
+		block.type = block.l1.get(block.l1.size()-1).type; // Type of the block is the type of its last expression.
 	}
 
 	private void Annotate(AST.let let){
@@ -300,7 +315,7 @@ public class Semantic{
 				reportError(filename, let.lineNo, "Inferred type of " + let.value.type + " of initialization of " + let.name + " in 'let' does not conform to idenitifier's declared type " + let.typeid);
 		}
 		scopeTable.enterScope();
-		scopeTable.insert(let.name, new AST.attr(let.name, let.typeid, let.value, let.lineNo));// we do this because if we have multiple same entries then the previous entries are overridden as mentioned in cool manual
+		scopeTable.insert(let.name, new AST.attr(let.name, let.typeid, let.value, let.lineNo));
 		Annotate(let.body);
 		let.type = let.body.type;
 		scopeTable.exitScope();
