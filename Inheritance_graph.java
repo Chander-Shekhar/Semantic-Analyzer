@@ -37,20 +37,20 @@ public class Inheritance_graph{
 		Graph.add(new ArrayList <Integer> (Arrays.asList(1)));
 		Graph.add(new ArrayList <Integer>());
 
-		List <String> no_redef = Arrays.asList("Object", "String", "Int", "Bool", "IO");// According to manual this classes cannot have redefintions
+		List <String> no_redef = Arrays.asList("Object", "String", "Int", "Bool", "IO");// According to manual these classes cannot have redefintions
 		List <String> no_inherit = Arrays.asList("String", "Int", "Bool");// No class can  inherit from this set of classes
 		size=2;
-		for(AST.class_ class_object : classes){
-			if(no_redef.contains(class_object.name)){
+		for(AST.class_ class_object : classes){//first traversal through AST 
+			if(no_redef.contains(class_object.name)){//throwing error on redefinition of basic class
 				System.err.println(class_object.filename+" : "+class_object.lineNo+" : Class redefinition of basic class "+ class_object.name);
 				System.exit(1);
-			}else if(no_inherit.contains(class_object.parent)){
+			}else if(no_inherit.contains(class_object.parent)){//throwing error on inheriting from string,int or bool
 				System.err.println(class_object.filename+" : "+class_object.lineNo+" : Class "+class_object.name+" cannot inherit class "+ class_object.parent);
 				System.exit(1);
-			}else if(Name_to_Class.containsKey(class_object.name)){
+			}else if(Name_to_Class.containsKey(class_object.name)){////throwing error on redefinition of a class
 				System.err.println(class_object.filename+" : "+class_object.lineNo+" : Class " +class_object.name + " was previously defined");
 				System.exit(1);
-			}else if(!Name_to_Class.containsKey(class_object.name)){
+			}else if(!Name_to_Class.containsKey(class_object.name)){// adding the new class into hashmaps and intializing array for storing child classes
 				Class_to_Int.put(class_object,size);
 				Int_to_Class.put(size,class_object);
 				Name_to_Class.put(class_object.name,class_object);
@@ -61,27 +61,27 @@ public class Inheritance_graph{
 	}
 
 	public void buildGraph(List<AST.class_> classes){
-		for(AST.class_ class_object : classes){
-			if(!Name_to_Class.containsKey(class_object.parent)){
+		for(AST.class_ class_object : classes){//second traversal through AST. Building inheritance graph needs two traversals because while traversing the first time we don't know which classes will come on later stage
+			if(!Name_to_Class.containsKey(class_object.parent)){//if parent is not present raise an error
 				System.err.println(class_object.filename+" : "+class_object.lineNo+" : Class " +class_object.name + " inherits from an undefined class " + class_object.parent);
 				System.exit(1);
 			}
-			Graph.get(Class_to_Int.get(Name_to_Class.get(class_object.parent))).add(Class_to_Int.get(class_object));
+			Graph.get(Class_to_Int.get(Name_to_Class.get(class_object.parent))).add(Class_to_Int.get(class_object));//adding integer which corresponds to child of a class
 		}
 	}
 
-	public void isDAG(){
-		boolean visited[]= new boolean[size+1];
+	public void isDAG(){// this program checks whether their is a cycle involved in the inheritance graph using DFS, if yes it halts the program 
+		boolean visited[]= new boolean[size+1];// a flag is stored on the last index of the array it will let us know whether is cycle involved or not
 		for(int i=0;i<size;i++){
 			if(!visited[i]){
-				dfs(i,visited);
+				dfs(i,visited);//calling dfs over all unvisited classes rather than object because their is a possibility of having a cycle none of which have ancestor pointing towards 'Object' this means that part will not be connected to the root(Object) in any way 
 			}
 		}
 		if(visited[size]) System.exit(1);
 	}
 
-	public void dfs(int v, boolean  visited[]){
-		if(visited[v]){
+	public void dfs(int v, boolean  visited[]){// in dfs if we find a back edge then that node is a part of cycle formed in inheritance graph so traversing through 									
+		if(visited[v]){			   // nodes via dfs on the node which  we found exists in a cycle we can extract all classes(or their ancestors) that are involved in ac cycle.
 			visited[size]=true;
 			boolean visit[]= new boolean[size];
 			ArrayList<String> Cycle = new ArrayList<String>();
@@ -97,7 +97,7 @@ public class Inheritance_graph{
 		}
 	}
 
-	public void print_cycle_classes(int v, boolean visited[],ArrayList<String> Cycle){
+	public void print_cycle_classes(int v, boolean visited[],ArrayList<String> Cycle){// another dfs function to extract elements involved in a cycle
 		visited[v]=true;
 		Cycle.add(Int_to_Class.get(v).name);
 		// System.err.println(Int_to_Class.get(v).filename+" : "+Int_to_Class.get(v).lineNo+" : Class " +Int_to_Class.get(v).name + ", or an ancestor of "+ Int_to_Class.get(v).name+ ", is involved in an inheritance cycle");
@@ -107,13 +107,13 @@ public class Inheritance_graph{
 		}
 	}
 
-	public void insert_classes(BuildTable Table){
+	public void insert_classes(BuildTable Table){// using bfs we trverse over the inheritance graph and build a Table which contains data of all the classes thus formed
 		Queue<Integer> Q = new LinkedList<>();
 		Q.add(0);
 		while(!Q.isEmpty()){
 			int i=Q.poll();
 			// System.err.println(Int_to_Class.get(i).name+" "+ Int_to_Class.get(i).parent);
-			if(i>1) Table.insert(Int_to_Class.get(i));
+			if(i>1) Table.insert(Int_to_Class.get(i));//Object and IO are manually added into this table
 			for(int j=0;j<Graph.get(i).size();j++){
 				Q.add(Graph.get(i).get(j));
 			}
