@@ -180,9 +180,11 @@ public class BuildTable
 		if(c1.equals(c2)) return true;
 		else 
 		{
-			c1 = classList.get(c1).parent;
-			if(c1 == null) return false;
-			else return conformsTo(c1, c2);
+			if(classList.containsKey(c1)){
+				c1 = classList.get(c1).parent;
+				return conformsTo(c1, c2);
+			}
+			return false;
 		}
 	}
 
