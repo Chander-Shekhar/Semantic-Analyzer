@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 public class BuildTable
 {
 	private HashMap<String, AST.class_> classList = new HashMap<String, AST.class_>();
-	private errFlag = false;
+	private boolean errFlag = false;
 	public void reportError(String filename, int lineNo, String error){
 		errFlag = true;
 		System.err.println(filename+":"+lineNo+": "+error);
