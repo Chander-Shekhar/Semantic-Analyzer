@@ -24,7 +24,7 @@ public class Semantic{
 		scopeTable = new ScopeTable<AST.attr>();
 		Inheritance_graph inGraph = new Inheritance_graph(program.classes, Table);// intializing the inheritance graph
 		inGraph.buildGraph(program.classes);//inheritance graph forms in this step
-		inGraph.isDAG();//checks for cycles if they are present the program is haulted 
+		inGraph.isDAG();//checks for cycles if they are present the program is halted 
 		inGraph.insert_classes(Table);// using inheritance graph each classes is added in a table and their feature list is updated
 		
 		if(Table.getErrorFlag())
