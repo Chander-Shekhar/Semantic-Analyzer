@@ -254,25 +254,26 @@ public class Semantic{
 
 	}
 	private void Annotate(AST.typcase typcase){
-		Annotate(typcase.predicate);
+		//this is case in cool
+		Annotate(typcase.predicate);//first evaluate predicate
 		for(AST.branch br : typcase.branches) {
-			scopeTable.enterScope();
-			if(!Table.isPresent(br.type)){
+			scopeTable.enterScope();//we enter into new scope
+			if(!Table.isPresent(br.type)){//if given branch type is not present throw error else insert type into scopeTable
 				reportError(filename, br.lineNo, "Class " + br.type + " of case branch is undefined.");
-				scopeTable.insert(br.name, new AST.attr(br.name, "Object", br.value, br.lineNo));	// In the case of erroneous branch type, branch variable has type "Object" for the scope.
+				scopeTable.insert(br.name, new AST.attr(br.name, "Object", br.value, br.lineNo));	
 			}
 			else scopeTable.insert(br.name, new AST.attr(br.name, br.type, br.value, br.lineNo));
 			Annotate(br.value);
 			scopeTable.exitScope();
 		}
-		if(typcase.branches.size()==0){
+		if(typcase.branches.size()==0){//if no branch is present 
 			reportError(filename, typcase.lineNo, " Case Statement does not have any branch");
 			return;
 		}
-		HashMap <String, Boolean> br_types = new HashMap<String, Boolean> ();
+		HashMap <String, Boolean> br_types = new HashMap<String, Boolean> ();//hashmap for storing branch types and then checking if the value is present in O(1) time  
 		String typ = typcase.branches.get(0).value.type;
 		
-		for(AST.branch br : typcase.branches) {
+		for(AST.branch br : typcase.branches) {//throws error if there are duplicate branches
 			if(br_types.containsKey(br.type) == false)
 				br_types.put(br.type, true);
 			else
