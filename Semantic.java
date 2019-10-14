@@ -20,14 +20,14 @@ public class Semantic{
 	private String filename;
 	public Semantic(AST.program program){
 		//Write Semantic analyzer code here
-		Table = new BuildTable();
+		Table = new BuildTable();//initializing attributes
 		scopeTable = new ScopeTable<AST.attr>();
-		Inheritance_graph inGraph = new Inheritance_graph(program.classes, Table);
-		inGraph.buildGraph(program.classes);
-		inGraph.isDAG();
-		inGraph.insert_classes(Table);
+		Inheritance_graph inGraph = new Inheritance_graph(program.classes, Table);// intializing the inheritance graph
+		inGraph.buildGraph(program.classes);//inheritance graph forms in this step
+		inGraph.isDAG();//checks for cycles if they are present the program is haulted 
+		inGraph.insert_classes(Table);// using inheritance graph each classes is added in a table and their feature list is updated
 		
-		for(AST.class_ e : program.classes) {
+		for(AST.class_ e : program.classes) {//building scope table
 			filename = e.filename;
 			scopeTable.enterScope();
 			scopeTable.insert("self", new AST.attr("self", e.name, new AST.no_expr(e.lineNo), e.lineNo));
@@ -35,15 +35,15 @@ public class Semantic{
 			Annotate(e);
 			scopeTable.exitScope();				
 		}
-		if(!Table.isPresent("Main")){
+		if(!Table.isPresent("Main")){//throwing error if Main classes is absent
 			reportError(filename, 1, "Program does not contain class 'Main'");
 		}else
 		{
 			AST.method m = Table.getMethod("Main","main");
-			if(m == null){
+			if(m == null){//throwing error if main method is not their in main
 				reportError(filename, 1, "'Main' class does not contain 'main' method");
 			}
-			else if(!m.formals.isEmpty()) 
+			else if(!m.formals.isEmpty()) // throwing error if arguments are passed to main
 			{
 				reportError(filename, 1, "'main' method in class Main should have no arguments.");
 			}
