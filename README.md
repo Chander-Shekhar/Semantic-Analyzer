@@ -16,7 +16,7 @@ If found, we print useful error messages and attempt to recover using predefined
 At the end, we output type annotated AST for correct programs and some useful errors for incorrect programs.
 
 ## Inheritance Graph
-For building the inheritance graph we traverse through the tree two times once for putting all the classes in our data structure that is we use 3 hashmaps for retrieving data from classes to be put into a Graph(In graphs terminology we say it is a adjacency list) and also we intialize the ArrayList for a graph node at in this traversal. In the second pass we populate the nodes in the graph with integer to the child nodes for a parent node. For checking cycles we have implemented depth-first search algorithm which calls on every unvisited node. At a point if we get that a node is a member of the cycle we return the names of Strongly connected components. Using this inheritance graph we populate the classList by going through the graph in a breadth-first search manner.
+For building the inheritance graph we traverse through the tree two times once for putting all the classes in our data structure that is we use 3 hashmaps for retrieving data from classes to be put into a Graph(In graphs terminology we say it is an adjacency list) and also we intialize the ArrayList for a graph node at in this traversal. In the second pass we populate the nodes in the graph with integer to the child nodes for a parent node. For checking cycles we have implemented depth-first search algorithm which calls on every unvisited node. At a point if we get that a node is a member of the cycle we return the names of Strongly connected components. Using this inheritance graph we populate the classList by going through the graph in a breadth-first search manner.
 
 
 
