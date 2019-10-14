@@ -18,23 +18,23 @@ At the end, we output type annotated AST for correct programs and some useful er
 ## File Structure- 
 The file structure is as follows:
 
--**AST.java**
+- **AST.java**
 
 This files contains nodes definitions for AST. No changes have been made to this file at all.
 	
--**BuildTable.java**			
+- **BuildTable.java**			
 	
 This file mainly maintains a HashMap <String ,AST.class_> and contains some useful functions to retrieve information from this HashMap at the time of annotating the AST.
 
--**Inheritance_graph.java**
+- **Inheritance_graph.java**
 
 Builds the inheritance graph for classes and check for cycles. Also insert the classes into the classList.
 
--**ScopeTable.java**
+- **ScopeTable.java**
 
 We added two methods to this file namely *getScope()* and *getMap()* which are used to populate the ScopeTable with attributes of a given class.
 
--**Semantic.java**
+- **Semantic.java**
 
 It annotates all the identifiers with appropriate types and calls functions from *Inheritance_graph.java* to check for cycles in the inheritance graph.
 
