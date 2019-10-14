@@ -278,7 +278,7 @@ public class Semantic{
 				br_types.put(br.type, true);
 			else
 				reportError(filename, br.lineNo, "Duplicate branch " + br.type + " in case statement.");
-			typ = Table.commonAncestor(typ, br.value.type);
+			typ = Table.commonAncestor(typ, br.value.type);//store the common ancestor of all the branches and return it as the type of case.
 		}
 		typcase.type = typ;
 	}
