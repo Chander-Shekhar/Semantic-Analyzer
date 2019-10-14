@@ -23,11 +23,11 @@
 ## File Structure- 
 	The file structure is as follows:
 
-	- **AST.java**
+- **AST.java**
 	This files contains nodes definitions for AST.
 	No changes have been made to this file at all.
 			
-	- **BuildTable.java**
+- **BuildTable.java**
 	This file mainly maintains a HashMap from String to AST.class_.
 	The key is name of the class and the value contains all the information of the class as given in the AST.
 	In addition to that, its features list also contains the attributes and methods of the class that it inherites from.
