@@ -27,6 +27,9 @@ public class Semantic{
 		inGraph.isDAG();//checks for cycles if they are present the program is haulted 
 		inGraph.insert_classes(Table);// using inheritance graph each classes is added in a table and their feature list is updated
 		
+		if(Table.getErrorFlag())
+			errorFlag = true;
+		
 		for(AST.class_ e : program.classes) {//building scope table
 			filename = e.filename;
 			scopeTable.enterScope();
